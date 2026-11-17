@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Santorini Chic Tour</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#f6f3ee;--ink2:rgba(246,243,238,.74);--ink3:rgba(246,243,238,.5);--glass:rgba(24,23,21,.32);--line:rgba(255,255,255,.18);--accent:#d9b88f;}
+html,body{margin:0;background:#0d0d0c;color:var(--ink);font-family:'Noto Sans JP','Hiragino Sans',sans-serif;}
+body{overflow-x:hidden;}
+#stage{position:fixed;inset:0;width:100vw;height:100vh;display:block;z-index:0;}
+#grain{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:2;opacity:.06;mix-blend-mode:soft-light;}
+#vig{position:fixed;inset:0;pointer-events:none;z-index:2;background:radial-gradient(ellipse at 50% 48%,rgba(0,0,0,0) 55%,rgba(0,0,0,.45) 100%);}
+#scroller{position:relative;z-index:3;pointer-events:none;}
+#top{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:18px 28px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink2);background:linear-gradient(180deg,rgba(0,0,0,.4),rgba(0,0,0,0));}
+#top b{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:17px;letter-spacing:.16em;color:var(--ink);text-transform:none;white-space:nowrap;}
+#top .r{display:flex;gap:8px;align-items:center;}
+.chip{white-space:nowrap;pointer-events:auto;border:1px solid var(--line);background:rgba(20,20,19,.35);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  color:var(--ink2);border-radius:999px;padding:7px 13px;font-size:11px;letter-spacing:.08em;cursor:pointer;font-family:inherit;text-decoration:none;}
+.chip.on{background:rgba(246,243,238,.92);color:#1b1a18;border-color:transparent;}
+.chip[disabled]{opacity:.35;cursor:default;}
+.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+#card{position:fixed;left:44px;bottom:64px;z-index:4;width:min(400px,calc(100vw - 32px));box-sizing:border-box;padding:24px 26px 22px;border-radius:18px;
+  background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(18px) saturate(1.1);-webkit-backdrop-filter:blur(18px) saturate(1.1);
+  box-shadow:0 20px 60px rgba(0,0,0,.25);transition:opacity .6s ease,transform .6s ease;}
+#card.hide{opacity:0;transform:translateY(14px);}
+#card .no{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15px;color:var(--accent);letter-spacing:.06em;}
+#card h2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:34px;line-height:1.1;margin:4px 0 2px;letter-spacing:.02em;}
+#card .jp{font-size:13px;color:var(--ink2);letter-spacing:.12em;margin-bottom:12px;}
+#card p{font-size:13px;line-height:1.85;color:var(--ink2);margin:0 0 10px;font-weight:300;}
+#card ul{margin:0;padding:0;list-style:none;font-size:12px;color:var(--ink2);line-height:1.8;}
+#card li{display:flex;gap:8px;}
+#card li::before{content:'';flex:none;width:5px;height:5px;border-radius:50%;background:var(--accent);margin-top:.72em;}
+#card li.pick{color:var(--ink);}
+#rail{position:fixed;right:26px;top:50%;transform:translateY(-50%);z-index:5;display:flex;flex-direction:column;gap:12px;}
+#rail button{pointer-events:auto;width:9px;height:9px;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.6);background:transparent;cursor:pointer;position:relative;}
+#rail button.on{background:var(--ink);border-color:var(--ink);}
+#rail button span{position:absolute;right:20px;top:50%;transform:translateY(-50%);white-space:nowrap;font-size:11px;color:var(--ink2);opacity:0;transition:.25s;}
+#rail button:hover span,#rail button.on span{opacity:1;}
+#bar{position:fixed;left:0;bottom:0;height:2px;width:0;background:var(--accent);z-index:5;}
+#hint{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:5;font-size:11px;letter-spacing:.2em;color:var(--ink3);transition:opacity .6s;white-space:nowrap;}
+#title{position:fixed;left:0;right:0;top:30%;z-index:4;text-align:center;transition:opacity .8s;pointer-events:none;}
+#title h1{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(40px,7vw,96px);letter-spacing:.12em;margin:0;text-shadow:0 4px 40px rgba(0,0,0,.35);}
+#title div{font-size:12px;letter-spacing:.34em;color:var(--ink2);margin-top:8px;}
+#load{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6;font-size:11px;letter-spacing:.3em;color:var(--ink3);transition:opacity .6s;}
+#note{position:fixed;right:26px;bottom:14px;z-index:5;font-size:10px;color:var(--ink3);letter-spacing:.06em;}
+#card .more{display:none;}
+/* 安全領域(ノッチ・ホームバー)を避ける */
+#top{padding-top:calc(18px + env(safe-area-inset-top,0px));}
+#bar{bottom:env(safe-area-inset-bottom,0px);}
+@media (max-width:760px){
+  #top{padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;} #top .lbl{display:none;} #top b{font-size:14px;} #top .r{gap:5px;} .chip{padding:7px 10px;font-size:11px;}
+  #card{left:12px;right:12px;bottom:calc(20px + env(safe-area-inset-bottom,0px));width:auto;padding:16px 18px 14px;border-radius:16px;}
+  #card h2{font-size:26px;} #card .jp{margin-bottom:8px;font-size:12px;} #card p{font-size:12.5px;line-height:1.75;margin-bottom:6px;} #card ul{font-size:12px;}
+  #card ul{display:none;} #card.open ul{display:block;}
+  #card .more{display:inline-block;pointer-events:auto;background:none;border:0;padding:6px 0 0;color:var(--accent);font:inherit;font-size:12px;letter-spacing:.06em;cursor:pointer;}
+  #rail{right:8px;gap:14px;} #rail button{width:10px;height:10px;} #rail button span{display:none;}
+  #note{right:auto;left:12px;top:calc(52px + env(safe-area-inset-top,0px));bottom:auto;font-size:9.5px;}
+  #hint{bottom:calc(26px + env(safe-area-inset-bottom,0px));}
+  #title{top:24%;}
+}
+@media (max-width:420px){ #top b{display:none;} #top{justify-content:flex-end;} #top>div:first-child{display:none;} }
+/* 横向きのスマホ(高さが低い) */
+@media (max-height:500px) and (orientation:landscape){
+  #top{padding:calc(8px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));}
+  #card{left:max(12px,env(safe-area-inset-left,0px));right:auto;bottom:calc(12px + env(safe-area-inset-bottom,0px));width:300px;padding:12px 14px 10px;}
+  #card h2{font-size:22px;} #card p{display:none;} #card.open p{display:block;} #card .jp{margin-bottom:4px;}
+  #note{display:none;}
+}
+@media (prefers-reduced-motion:reduce){#card,#title{transition:none;}}
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+<canvas id="grain"></canvas>
+<div id="vig"></div>
+<header id="top">
+  <div><b>Santorini Chic</b> <span class="lbl">&nbsp;·&nbsp; Cinematic Tour</span></div>
+  <div class="r">
+    <button class="chip on" data-t="day">昼</button>
+    <button class="chip" data-t="dusk">夕景</button>
+    <button class="chip" data-t="night">夜</button>
+    <button class="chip" id="play">▶ 自動再生</button>
+    <a class="chip" href="walkthrough.html">3D版</a>
+  </div>
+</header>
+<div id="title"><h1>Santorini Chic</h1><div>SCROLL TO WALK THROUGH THE ROOM</div></div>
+<div id="load">LOADING</div>
+<aside id="card" class="hide" aria-live="polite"></aside>
+<nav id="rail" aria-label="シーン"></nav>
+<div id="bar"></div>
+<div id="hint">SCROLL ↓</div>
+<div id="note">AI生成イメージ(間取り・家具配置は3D版が正確)</div>
+<main id="scroller"></main>
+<script src="manifest.js" charset="utf-8"></script>
+<script>
+'use strict';
+/* MANIFEST: {stills:[...], clips:[{dir,n}], alt:{idx:{dusk:'',night:''}}, cards:[...]} */
+const M=window.MANIFEST;
+const HOLD=0.85, CLIP=2.2;              // スクロール量(画面の高さ単位)
+const SEG=[]; let total=0;
+M.stills.forEach(function(s,i){
+  SEG.push({type:'hold',i:i,a:total,len:HOLD}); total+=HOLD;
+  if(i<M.clips.length){SEG.push({type:'clip',i:i,a:total,len:CLIP}); total+=CLIP;}
+});
+const scrollerEl=document.getElementById('scroller');
+function setHeight(){scrollerEl.style.height=Math.round((total+1)*innerHeight)+'px';}  // iOS のアドレスバー伸縮でもずれないよう px で
+
+/* ---- 画像の読み込み(近いものから順に) ---- */
+const cache=new Map();
+function img(src){
+  let im=cache.get(src);
+  if(!im){im=new Image();im.decoding='async';im.src=src;cache.set(src,im);}
+  return im;
+}
+function frameSrc(c,k){return 'frames/'+M.clips[c].dir+'/'+String(k+1).padStart(4,'0')+'.jpg';}
+function stillSrc(i){return 'stills/'+M.stills[i];}
+function preloadAround(segIdx){
+  for(let d=0;d<3;d++){
+    const g=SEG[segIdx+d]; if(!g)break;
+    if(g.type==='hold')img(stillSrc(g.i));
+    else{const n=M.clips[g.i].n;for(let k=0;k<n;k+=(d===0?1:2))img(frameSrc(g.i,k));}
+  }
+}
+
+/* ---- 描画 ---- */
+const cv=document.getElementById('stage'), g=cv.getContext('2d');
+let prevVH=0;
+function resize(){const r=Math.min(devicePixelRatio,2);cv.width=innerWidth*r;cv.height=innerHeight*r;lastKey='';
+  const pos=prevVH?scrollY/prevVH:0; setHeight();                         // 回転しても同じ場所を保つ
+  if(prevVH&&Math.abs(prevVH-innerHeight)>1){scrollTo(0,pos*innerHeight);} prevVH=innerHeight;}
+/* 縦長の画面(スマホ縦持ち)では、横長の画像を画面いっぱいに拡大すると中央しか見えないため、
+   幅の約 64% が見える大きさで上寄りに置き、まわりはぼかした同じ画像で埋める */
+const tiny=document.createElement('canvas'); tiny.width=32; tiny.height=18; const tg=tiny.getContext('2d');
+function drawCover(im,zoom){
+  if(!im||!im.complete||!im.naturalWidth)return false;
+  zoom=zoom||1;
+  const W=cv.width,H=cv.height,iw=im.naturalWidth,ih=im.naturalHeight,a0=g.globalAlpha;
+  if(W>=H*1.15){
+    const s=Math.max(W/iw,H/ih)*zoom, w=iw*s, h=ih*s;
+    g.drawImage(im,(W-w)/2,(H-h)/2,w,h); return true;
+  }
+  tg.drawImage(im,0,0,32,18);                                   // 小さく縮めてから拡大 → ぼかしの代わり
+  const bs=Math.max(W/32,H/18)*1.1;
+  g.imageSmoothingEnabled=true; g.drawImage(tiny,(W-32*bs)/2,(H-18*bs)/2,32*bs,18*bs);
+  g.globalAlpha=a0*0.5; g.fillStyle='#0d0d0c'; g.fillRect(0,0,W,H); g.globalAlpha=a0;
+  const s=Math.min(W/(iw*0.64),H*0.58/ih)*zoom, w=iw*s, h=ih*s, cy=H*0.38;
+  g.drawImage(im,(W-w)/2,cy-h/2,w,h);
+  return true;
+}
+function bestFrame(c,k){ // 未読込なら近いフレームで代用
+  for(let d=0;d<M.clips[c].n;d++){
+    for(const kk of [k-d,k+d]){if(kk<0||kk>=M.clips[c].n)continue;
+      const im=cache.get(frameSrc(c,kk)); if(im&&im.complete&&im.naturalWidth)return im;}
+  }
+  return null;
+}
+
+/* ---- カード・目次 ---- */
+const cardEl=document.getElementById('card'), railEl=document.getElementById('rail');
+function esc(s){return String(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+let shown=-2, cardOpen=false;
+cardEl.addEventListener('click',function(e){            // スマホでは家具リストをタップで開閉
+  if(!e.target.closest('.more'))return;
+  cardOpen=!cardOpen; cardEl.classList.toggle('open',cardOpen);
+  e.target.textContent=cardOpen?'閉じる ▴':'家具を見る ▾';
+});
+function showCard(i){
+  if(i===shown)return; shown=i;
+  const c=M.cards[i];
+  if(i<0||!c){cardEl.classList.add('hide');}
+  else{
+    cardEl.innerHTML='<div class="no">'+c.no+'</div><h2>'+esc(c.en)+'</h2><div class="jp">'+esc(c.jp)+'</div><p>'+esc(c.txt)+'</p><ul>'+
+      c.li.map(function(x){return typeof x==='string'?'<li>'+esc(x)+'</li>':'<li class="pick">'+esc(x.t)+'</li>';}).join('')+'</ul>'+
+      '<button class="more" type="button">'+(cardOpen?'閉じる ▴':'家具を見る ▾')+'</button>';
+    cardEl.classList.toggle('open',cardOpen);
+    cardEl.classList.remove('hide');
+  }
+  railEl.querySelectorAll('button').forEach(function(b){b.classList.toggle('on',+b.dataset.i===i);});
+}
+SEG.forEach(function(s){
+  if(s.type!=='hold'||!M.cards[s.i])return;
+  const b=document.createElement('button'); b.dataset.i=s.i; b.setAttribute('aria-label',M.cards[s.i].jp);
+  b.innerHTML='<span>'+esc(M.cards[s.i].short)+'</span>';
+  b.onclick=function(){stopAuto();scrollTo({top:(s.a+s.len*0.4)*innerHeight,behavior:'smooth'});};
+  railEl.appendChild(b);
+});
+
+/* ---- 時間帯(居間・食卓で夕景/夜の画像に切替) ---- */
+let tod='day', altMix=0, altSrc=null;     // 夕景・夜の画像はキャンバス上で重ねてフェード
+document.querySelectorAll('.chip[data-t]').forEach(function(b){
+  b.onclick=function(){tod=b.dataset.t;document.querySelectorAll('.chip[data-t]').forEach(function(x){x.classList.toggle('on',x===b);});};
+});
+function altFor(holdIdx){const a=M.alt[holdIdx]; return a&&a[tod]?'stills/'+a[tod]:null;}
+
+/* ---- 自動再生 ---- */
+let auto=false; const playBtn=document.getElementById('play');
+function stopAuto(){auto=false;playBtn.classList.remove('on');playBtn.textContent='▶ 自動再生';}
+playBtn.onclick=function(){auto=!auto;playBtn.classList.toggle('on',auto);playBtn.textContent=auto?'❚❚ 停止':'▶ 自動再生';
+  if(auto&&scrollY>=document.documentElement.scrollHeight-innerHeight-4)scrollTo(0,0);};
+addEventListener('wheel',function(){if(auto)stopAuto();},{passive:true});
+addEventListener('touchstart',function(){if(auto)stopAuto();},{passive:true});
+
+/* ---- グレイン ---- */
+const gc=document.getElementById('grain'), gg=gc.getContext('2d'); gc.width=gc.height=200;
+const gd=gg.createImageData(200,200);
+function grain(){const d=gd.data;for(let i=0;i<d.length;i+=4){const v=Math.random()*255;d[i]=d[i+1]=d[i+2]=v;d[i+3]=255;}gg.putImageData(gd,0,0);}
+
+/* ---- ループ ---- */
+const titleEl=document.getElementById('title'),barEl=document.getElementById('bar'),hintEl=document.getElementById('hint'),loadEl=document.getElementById('load');
+let sCur=0,prevT=performance.now(),fr=0,lastKey='';
+function tick(now){
+  requestAnimationFrame(tick);
+  const dt=Math.min((now-prevT)/1000,0.05); prevT=now;
+  if(auto){scrollBy(0,innerHeight*0.3*dt); if(scrollY>=document.documentElement.scrollHeight-innerHeight-2)stopAuto();}
+  const goal=scrollY/innerHeight; sCur+=(goal-sCur)*(1-Math.exp(-dt*5));
+  const s=Math.min(total-1e-4,Math.max(0,sCur));
+  let k=0; while(k<SEG.length-1&&s>=SEG[k].a+SEG[k].len)k++;
+  const seg=SEG[k], t=(s-seg.a)/seg.len;
+  preloadAround(k);
+  let key, ok;
+  if(seg.type==='hold'){
+    const z=1.03+0.025*Math.sin(Math.PI*t);               // 止まっている間はゆっくり寄って戻る
+    const as=altFor(seg.i), aim=as?img(as):null, aReady=aim&&aim.complete&&aim.naturalWidth;
+    if(as)altSrc=as;
+    const goalMix=aReady?1:0; altMix+=(goalMix-altMix)*(1-Math.exp(-dt*3)); if(Math.abs(goalMix-altMix)<0.003)altMix=goalMix;
+    key='h'+seg.i+':'+z.toFixed(4)+':'+altMix.toFixed(3)+':'+cv.width+'x'+cv.height;
+    if(key!==lastKey){
+      ok=drawCover(img(stillSrc(seg.i)),z);
+      if(ok&&altMix>0&&altSrc){g.globalAlpha=altMix;drawCover(img(altSrc),z);g.globalAlpha=1;}
+      if(ok)lastKey=key;
+    }
+    showCard(seg.i);
+  }else if(!M.clips[seg.i].n){                            // 動画がない区間は静止画をクロスフェード
+    key='x'+seg.i+':'+t.toFixed(3)+':'+cv.width+'x'+cv.height;
+    if(key!==lastKey){
+      const a=img(stillSrc(seg.i)), b=img(stillSrc(seg.i+1));
+      g.globalAlpha=1; drawCover(a,1.03); g.globalAlpha=t*t*(3-2*t); drawCover(b,1.03); g.globalAlpha=1; lastKey=key;
+    }
+    showCard(-1); altMix=0;
+  }else{
+    const n=M.clips[seg.i].n, f=Math.min(n-1,Math.floor(t*n));
+    key='c'+seg.i+':'+f+':'+cv.width+'x'+cv.height;
+    if(key!==lastKey){const im=bestFrame(seg.i,f)||img(frameSrc(seg.i,f)); ok=drawCover(im,1.03); if(ok&&im===cache.get(frameSrc(seg.i,f)))lastKey=key;}
+    showCard(-1); altMix=0;
+  }
+  titleEl.style.opacity=Math.max(0,1-sCur*1.8);
+  hintEl.style.opacity=Math.max(0,1-sCur*3);
+  barEl.style.width=(s/total*100)+'%';
+  if((fr++&1)===0)grain();
+}
+resize(); addEventListener('resize',resize);
+img(stillSrc(0)).onload=function(){loadEl.style.opacity=0;};
+if(matchMedia('(pointer:coarse)').matches)hintEl.textContent='上にスワイプ ↑';
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
